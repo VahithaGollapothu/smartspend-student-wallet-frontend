@@ -22,6 +22,18 @@ export default function Dashboard() {
   const [spendLimit, setSpendLimit] = useState(null)
   const [txns, setTxns]             = useState([])
   const [loading, setLoading]       = useState(true)
+  const [waking, setWaking]         = useState(true)
+
+  // Wake up Render backend on first load
+  useEffect(() => {
+    fetch('https://smartspend-student-wallet-backend.onrender.com/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({})
+    })
+    .catch(() => {})
+    .finally(() => setWaking(false))
+  }, [])
 
   const fetchData = async () => {
     try {
@@ -36,11 +48,21 @@ export default function Dashboard() {
     finally { setLoading(false) }
   }
 
-  useEffect(() => { fetchData() }, [user.studentId])
+  useEffect(() => {
+    if (!waking) fetchData()
+  }, [waking, user.studentId])
 
   const monthlySpent = txns
     .filter(t => t.type === 'DEBIT' && new Date(t.createdAt).getMonth() === new Date().getMonth())
     .reduce((s, t) => s + Number(t.amount), 0)
+
+  if (waking) return (
+    <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', height:'80vh', color:'#8e96b8', gap:'1rem' }}>
+      <div style={{ fontSize:'2rem', animation:'spin 1s linear infinite' }}>⟳</div>
+      <p style={{ fontSize:'0.9rem' }}>Waking up server, please wait...</p>
+      <p style={{ fontSize:'0.78rem', color:'#b0b8d4' }}>This may take up to 60 seconds on first load</p>
+    </div>
+  )
 
   if (loading) return (
     <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:'80vh', color:'#8e96b8' }}>
