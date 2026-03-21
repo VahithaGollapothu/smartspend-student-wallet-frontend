@@ -1,13 +1,12 @@
 import axios from 'axios'
 
 const api = axios.create({
-  baseURL: 'http://localhost:8081/api',
+  baseURL: 'https://smartspend-student-wallet-backend.onrender.com/api',
   headers: { 'Content-Type': 'application/json' }
 })
 
 api.interceptors.request.use(config => {
   const token = localStorage.getItem('token')
-  console.log('Sending request with token:', token ? 'YES' : 'NO TOKEN FOUND')
   if (token) config.headers.Authorization = `Bearer ${token}`
   return config
 })
