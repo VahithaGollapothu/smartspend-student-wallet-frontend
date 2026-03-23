@@ -10,10 +10,10 @@ import toast from 'react-hot-toast'
 
 const actions = [
   { to:'/add-money',    label:'Add Money',    icon:'↑', color:'#059669', bg:'#d1fae5', border:'#a7f3d0' },
-  { to:'/spend',        label:'Spend',         icon:'↓', color:'#2563eb', bg:'#dbeafe', border:'#bfdbfe' },
-  { to:'/emergency',    label:'Emergency',     icon:'⚡', color:'#dc2626', bg:'#fee2e2', border:'#fecaca' },
-  { to:'/set-limit',    label:'Set Limit',     icon:'🛡', color:'#7c3aed', bg:'#ede9fe', border:'#ddd6fe' },
-  { to:'/transactions', label:'All History',   icon:'≡',  color:'#d97706', bg:'#fef3c7', border:'#fde68a' },
+  { to:'/spend',        label:'Spend',        icon:'↓', color:'#2563eb', bg:'#dbeafe', border:'#bfdbfe' },
+  { to:'/emergency',    label:'Emergency',    icon:'⚡', color:'#dc2626', bg:'#fee2e2', border:'#fecaca' },
+  { to:'/set-limit',    label:'Set Limit',    icon:'🛡', color:'#7c3aed', bg:'#ede9fe', border:'#ddd6fe' },
+  { to:'/transactions', label:'All History',  icon:'≡',  color:'#d97706', bg:'#fef3c7', border:'#fde68a' },
 ]
 
 export default function Dashboard() {
@@ -22,18 +22,6 @@ export default function Dashboard() {
   const [spendLimit, setSpendLimit] = useState(null)
   const [txns, setTxns]             = useState([])
   const [loading, setLoading]       = useState(true)
-  const [waking, setWaking]         = useState(true)
-
-  // Wake up Render backend on first load
-  useEffect(() => {
-    fetch('https://smartspend-student-wallet-backend.onrender.com/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({})
-    })
-    .catch(() => {})
-    .finally(() => setWaking(false))
-  }, [])
 
   const fetchData = async () => {
     try {
@@ -44,25 +32,21 @@ export default function Dashboard() {
       setBalance(wallet.balance)
       setSpendLimit(wallet.spendLimit)
       setTxns(transactions)
-    } catch { toast.error('Failed to load data') }
-    finally { setLoading(false) }
+    } catch (err) {
+      console.error('Dashboard error:', err)
+      toast.error('Failed to load data')
+    } finally {
+      setLoading(false)
+    }
   }
 
   useEffect(() => {
-    if (!waking) fetchData()
-  }, [waking, user.studentId])
+    fetchData()
+  }, [user.studentId])
 
   const monthlySpent = txns
     .filter(t => t.type === 'DEBIT' && new Date(t.createdAt).getMonth() === new Date().getMonth())
     .reduce((s, t) => s + Number(t.amount), 0)
-
-  if (waking) return (
-    <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', height:'80vh', color:'#8e96b8', gap:'1rem' }}>
-      <div style={{ fontSize:'2rem', animation:'spin 1s linear infinite' }}>⟳</div>
-      <p style={{ fontSize:'0.9rem' }}>Waking up server, please wait...</p>
-      <p style={{ fontSize:'0.78rem', color:'#b0b8d4' }}>This may take up to 60 seconds on first load</p>
-    </div>
-  )
 
   if (loading) return (
     <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:'80vh', color:'#8e96b8' }}>
